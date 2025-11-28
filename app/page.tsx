@@ -191,7 +191,7 @@ const getFilter = async (
     query = query.eq("amount", Number(amount));
   }
 
-  const { data, error } = await query.order("date", { ascending: false });
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching", error);
