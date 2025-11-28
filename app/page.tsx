@@ -27,11 +27,11 @@ type typeDropDownType = {
 }[];
 
 type filterTypes = {
-  date?: string;
-  description?: string;
-  vehicle?: string;
-  type?: string;
-  amount?: string;
+  date: string;
+  description: string;
+  vehicle: string;
+  type: string;
+  amount: string;
 };
 
 const initFilterTypes = {
@@ -82,7 +82,7 @@ const getVehicles = async (
   const { data, error } = await supabase
     .from("Vehicles")
     .select("*, color:Color(*), model:Model(*, brand:Brands(*))")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (error) {
     console.error("Error fetching", error);
@@ -109,9 +109,19 @@ const handleInputChange = async (
   rows: Transactions[],
   setRows: React.Dispatch<React.SetStateAction<Transactions[]>>
 ) => {
+  let updatedValue: string | number;
+
+  if (field === "amount") {
+    updatedValue = parseFloat(value) || 0;
+  } else if (field === "vehicle") {
+    updatedValue = parseInt(value) || 1;
+  } else {
+    updatedValue = value;
+  }
+
   setRows((prev) =>
     prev.map((row) => {
-      if (row.id === id) return { ...row, [field]: value };
+      if (row.id === id) return { ...row, [field]: updatedValue };
       return row;
     })
   );
@@ -148,7 +158,7 @@ const getFilter = async (
   const trimmedValue = inputValue.trim();
 
   if (trimmedValue.length === 0) {
-    valueToFilter = undefined;
+    valueToFilter = "";
   } else if (field === "vehicle" || field === "amount") {
     const parsedNumber = parseInt(inputValue);
     valueToFilter = isNaN(parsedNumber) ? undefined : parsedNumber;
@@ -325,7 +335,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8">
       {/* Header Section */}
-      <div className="max-w-6xl mx-auto mb-8">
+      <div className="w-full mx-auto mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
@@ -461,7 +471,14 @@ export default function Home() {
                         <input
                           type="text"
                           value={filter.description as string}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const newFilter: filterTypes = {
+                              ...filter,
+                              description: e.target.value,
+                            } as filterTypes;
+                            setFilter(newFilter);
+                          }}
+                          onBlur={(e) =>
                             getFilter(
                               setFilter,
                               filter,
@@ -471,6 +488,9 @@ export default function Home() {
                               setLoading
                             )
                           }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                          }}
                           className="w-full bg-transparent text-slate-700 p-1 border border-slate-300 rounded-md focus:ring-0"
                         />
                       </th>
